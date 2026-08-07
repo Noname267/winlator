@@ -43,7 +43,12 @@ public class EnvVarsView extends FrameLayout {
         {"WINE_NEW_MEDIASOURCE", "CHECKBOX", "0", "1"},
         {"GALLIUM_HUD", "SELECT_MULTIPLE", "simple", "fps", "frametime"},
         {"WINE_LARGE_ADDRESS_AWARE", "CHECKBOX", "0", "1"},
-        {"WINEDLLOVERRIDES", "TEXT"}
+        {"WINEDLLOVERRIDES", "TEXT"},
+        {"DXVK_CONFIG_FILE", "TEXT"},
+        {"DXVK_STATE_CACHE", "CHECKBOX", "0", "1"},
+        {"DXVK_LOG_LEVEL", "SELECT", "none", "error", "warn", "info", "debug"},
+        {"PROTON_LOG", "CHECKBOX", "0", "1"},
+        {"MESA_DEBUG", "SELECT", "silent", "flush", "incomplete_tex", "incomplete_fbo", "context"}
     };
     private final LinearLayout container;
     private final TextView emptyTextView;
