@@ -48,7 +48,8 @@ public class EnvVarsView extends FrameLayout {
         {"DXVK_STATE_CACHE", "CHECKBOX", "0", "1"},
         {"DXVK_LOG_LEVEL", "SELECT", "none", "error", "warn", "info", "debug"},
         {"PROTON_LOG", "CHECKBOX", "0", "1"},
-        {"MESA_DEBUG", "SELECT", "silent", "flush", "incomplete_tex", "incomplete_fbo", "context"}
+        {"MESA_DEBUG", "SELECT", "silent", "flush", "incomplete_tex", "incomplete_fbo", "context"},
+        {"WRAPPER_NO_PATCH_OPCONSTCOMP", "CHECKBOX", "0", "1"}
     };
     private final LinearLayout container;
     private final TextView emptyTextView;
