@@ -84,16 +84,15 @@ void DisplayX::onFrameCallback64(int64_t frameTimeNanos, void* data) {
     auto *self = reinterpret_cast<DisplayX *>(data);
    
     if (self->cursorUpdate && self->cursorManager->control && !self->paused) {
-        self->queueEvent([self] { 
-            self->updateCursorPosition();
-            self->cursorUpdate = false;
-        });
+        self->eventLock.notify();
     }
     
-    if (!self->presentRequests.empty() && !self->requestUpdate) {
+    {
         auto lock = self->presentLock.lock();
-        self->requestUpdate = true;
-        self->presentLock.notify();
+        if (!self->presentRequests.empty() && self->presentRR) {
+            self->requestUpdate = true;
+            self->presentLock.notify();
+        }
     }
     
     pfnAChoreographerPostFrameCallback64(self->choreographer, DisplayX::onFrameCallback64, self);
@@ -273,7 +272,7 @@ void DisplayX::networkThreadLoop() {
                             
                             fence = readFD(events[i].data.fd);
                             
-                            read(events[id].data.fd, &present_id, 8);
+                            read(events[i].data.fd, &present_id, 8);
                             
                             auto swapchain = clientSwapchains[id].get();
                             if (!swapchain)
@@ -289,11 +288,12 @@ void DisplayX::networkThreadLoop() {
                             presentRequest->drawable = drawable;
                             presentRequest->sync_fence = fence;
                             presentRequest->presentId = present_id;
-                            presentRequest->clientFd = events[id].data.fd;
+                            presentRequest->clientFd = events[i].data.fd;
                             presentRequest->window = swapchain->window;
                             presentRequest->swapchainId = id;
                             
                             presentRequests.push(std::move(presentRequest));
+                            if (!presentRR) presentLock.notify();
                             break;
                         }    
                         case DESTROY_CLIENT_SWAPCHAIN: {
@@ -326,7 +326,7 @@ void DisplayX::eventThreadLoop() {
         
         auto lock = eventLock.lock();
         eventLock.wait(lock, [&]{ 
-            return stopped || state != State::NONE || !eventQueue.empty();
+            return stopped || state != State::NONE || !eventQueue.empty() || cursorUpdate;
         });
         
         if (stopped) {
@@ -394,6 +394,11 @@ void DisplayX::eventThreadLoop() {
             }
             presentLock.notify();
         }
+        
+        if (cursorUpdate) {
+            updateCursorPosition();
+            cursorUpdate = false;
+        }
     }
 }
 
@@ -406,7 +411,7 @@ int64_t DisplayX::getCurrentTimeNanos() {
 
 void DisplayX::onCommitCallback(void *context, ASurfaceTransactionStats *stats) {
     auto *self = reinterpret_cast<DisplayX *>(context);
-    if (!self->isPerformanceHintAPIAvailable() || !self->performanceHintSession || !self->performanceHintManager)
+    if (!self->isPerformanceHintAPIAvailable() || !self->performanceHintSession || !self->performanceHintManager || !self->perfMode)
         return;
     
     if (self->previousReportedWorkTime == 0) {
@@ -438,9 +443,9 @@ void DisplayX::presentThreadLoop() {
     ASurfaceTransaction *presentTransaction = pfnASurfaceTransactionCreate();
     JNIEnv *env = cache->getEnv();
     
-    if (isPerformanceHintAPIAvailable()) {
+    if (isPerformanceHintAPIAvailable() && perfMode) {
         performanceHintManager = pfnAPerformanceHintGetManager();
-        float targetFloat = this->perfMode ? xServer->refreshRate * 100.0f : xServer->refreshRate;
+        float targetFloat = xServer->refreshRate * 100.0f;
         int64_t targetWorkDuration = static_cast<int64_t>(1000000000.0f / targetFloat);
     
         int tid = gettid();
@@ -453,7 +458,7 @@ void DisplayX::presentThreadLoop() {
         auto lock = presentLock.lock();
         
         presentLock.wait(lock, [&]{ 
-            return stopped || (eventsPending == 0 && requestUpdate && hasSurface && surfaceChanged && !paused);
+            return stopped || (eventsPending == 0 && ((requestUpdate && presentRR) || (!presentRequests.empty() && !presentRR)) && hasSurface && surfaceChanged && !paused);
         });
         
         if (stopped) {
@@ -469,7 +474,7 @@ void DisplayX::presentThreadLoop() {
             requests.push(std::move(presentRequest));
         }
         
-        requestUpdate = false;
+        if (presentRR) requestUpdate = false;
         lock.unlock();
         
         auto completeContext = std::make_unique<OnCompleteContext>();
@@ -499,7 +504,7 @@ void DisplayX::presentThreadLoop() {
             }
         }
         
-        if (pfnASurfaceTransactionSetOnCommit) pfnASurfaceTransactionSetOnCommit(presentTransaction, this, DisplayX::onCommitCallback);
+        if (perfMode && pfnASurfaceTransactionSetOnCommit) pfnASurfaceTransactionSetOnCommit(presentTransaction, this, DisplayX::onCommitCallback);
         if (!completeContext->requests.empty()) pfnASurfaceTransactionSetOnComplete(presentTransaction, completeContext.release(), DisplayX::onCompleteCallback);
         pfnASurfaceTransactionApply(presentTransaction);
     }
@@ -615,11 +620,11 @@ void DisplayX::requestWindowUpdate(Drawable *drawable, Window *window) {
     presentRequest->window = window;
     
     presentRequests.push(std::move(presentRequest));
+    if (!presentRR) presentLock.notify();
 }
 
 void DisplayX::requestCursorUpdate() {
     if (!cursorVisible) return;
-    
     this->cursorUpdate = true;
 }
 
@@ -957,4 +962,8 @@ void DisplayX::toggleFullscreen() {
 
 void DisplayX::setPerformanceMode(bool perfMode) {
     this->perfMode = perfMode;
+}
+
+void DisplayX::setPresentRR(bool presentRR) {
+    this->presentRR = presentRR;
 }
