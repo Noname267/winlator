@@ -44,6 +44,7 @@ public class EnvVarsView extends FrameLayout {
         {"GALLIUM_HUD", "SELECT_MULTIPLE", "simple", "fps", "frametime"},
         {"WINE_LARGE_ADDRESS_AWARE", "CHECKBOX", "0", "1"},
         {"WINEDLLOVERRIDES", "TEXT"},
+        {"DXVK_FRAME_RATE", "NUMBER"},
         {"DXVK_CONFIG_FILE", "TEXT"},
         {"DXVK_STATE_CACHE", "CHECKBOX", "0", "1"},
         {"DXVK_LOG_LEVEL", "SELECT", "none", "error", "warn", "info", "debug"},
