@@ -1659,7 +1659,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
-        if (isPaused) return true;  // Avoid ANR exception when processes are paused.
         boolean handledByWinHandler = false;
         boolean handledByTouchpadView = false;
 
