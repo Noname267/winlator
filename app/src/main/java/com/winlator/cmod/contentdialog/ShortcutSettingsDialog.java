@@ -376,16 +376,6 @@ public class ShortcutSettingsDialog extends ContentDialog {
             String name = etName.getText().toString().trim();
             boolean nameChanged = !shortcut.name.equals(name) && !name.isEmpty();
 
-            // First, handle renaming if the name has changed
-            if (nameChanged) {
-                renameShortcut(name);
-            }
-
-
-            // Determine if renaming is needed
-            boolean renamingSuccess = !nameChanged || new File(shortcut.file.getParent(), name + ".desktop").exists();
-
-            if (renamingSuccess) {
                 String graphicsDriver = StringUtils.parseIdentifier(sGraphicsDriver.getSelectedItem());
                 String displayDriver = StringUtils.parseIdentifier(sDisplayDriver.getSelectedItem());
                 String graphicsDriverConfig = vGraphicsDriverConfig.getTag().toString();
@@ -419,7 +409,7 @@ public class ShortcutSettingsDialog extends ContentDialog {
                     shortcut.putExtra("displayxConfig", vDisplayDriverConfig.getTag().toString());
                 else
                     shortcut.putExtra("eglConfig", vDisplayDriverConfig.getTag().toString());
-                    
+
                 shortcut.putExtra("graphicsDriver", graphicsDriver);
                 shortcut.putExtra("graphicsDriverConfig", graphicsDriverConfig);
                 shortcut.putExtra("dxwrapper", dxwrapper);
@@ -465,6 +455,10 @@ public class ShortcutSettingsDialog extends ContentDialog {
 
                 // Save all changes to the shortcut
                 shortcut.saveData();
+
+            // Last, handle renaming if the name has changed
+            if (nameChanged) {
+                renameShortcut(name);
             }
         });
     }
