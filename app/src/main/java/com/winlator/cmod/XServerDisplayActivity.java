@@ -1650,6 +1650,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        // Avoid processing touch events when processes are paused and drawer is closed.
+        if (isPaused && (drawerLayout == null || !drawerLayout.isDrawerOpen(GravityCompat.START))) return true;
+
+        return super.dispatchTouchEvent(event);
+    }
+
+    @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
         boolean handledByWinHandler = false;
         boolean handledByTouchpadView = false;
