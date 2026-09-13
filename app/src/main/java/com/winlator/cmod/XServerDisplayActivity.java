@@ -1265,7 +1265,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         if (isShowFPS()) {
-            frameRating = new FrameRating(this, graphicsDriverConfig, displayDriver);
+            frameRating = new FrameRating(this, graphicsDriverConfig, displayDriver, displayConfig);
             frameRating.setVisibility(View.GONE);
             rootView.addView(frameRating);
         }
