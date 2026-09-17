@@ -138,7 +138,6 @@
         <item>70</item>
         <item>80</item>
         <item>90</item>
-        <item>120</item>
     </string-array>
     <string-array name="wincomponent_entries">
         <item>Builtin (Wine)</item>
