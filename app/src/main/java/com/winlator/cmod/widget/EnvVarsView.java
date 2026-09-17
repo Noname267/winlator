@@ -46,8 +46,8 @@ public class EnvVarsView extends FrameLayout {
         {"WINEDLLOVERRIDES", "TEXT"},
         {"DXVK_LOG_LEVEL", "SELECT", "none", "error", "warn", "info", "debug"},
         {"DXVK_FRAME_RATE", "NUMBER"},
-        {"DXVK_STATE_CACHE", "CHECKBOX", "0", "1"},
         {"DXVK_CONFIG_FILE", "TEXT"},
+        {"DXVK_STATE_CACHE", "CHECKBOX", "0", "1"},
         {"WRAPPER_NO_OPCONSTCOMP", "CHECKBOX", "0", "1"}
     };
     private final LinearLayout container;
