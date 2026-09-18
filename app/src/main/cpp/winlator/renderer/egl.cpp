@@ -286,6 +286,7 @@ void EGLRenderer::renderCursor() {
     jint id = env->GetIntField(pointWindowObj, cache->windowID);
     auto pointWindow = windowManager->getWindow(id);
     auto cursor = (pointWindow != nullptr) ? pointWindow->cursor : nullptr;
+    
     int x = std::clamp(cursorManager->pointer.posX, 0, windowManager->getRootWindow()->width - 1);
     int y = std::clamp(cursorManager->pointer.posY, 0, windowManager->getRootWindow()->height - 1);
 
